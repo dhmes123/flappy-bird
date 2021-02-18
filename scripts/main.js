@@ -1,6 +1,9 @@
 const canvas = document.querySelector('#gameScreen');
 const ctx = canvas.getContext("2d");
-
+const gameStatus = {
+    isPlaying:false,
+    gameOver:false
+}
 
 class Bird{
     constructor(size){
@@ -19,7 +22,7 @@ class Bird{
     }
     checkCollision(){
         let minY = 0 + Math.floor(this.size/2);
-        let maxY = canvas.height - this.size*2;
+        let maxY = canvas.height - this.size;
         player.pos.y = minmax(minY,maxY,player.pos.y);
     }
 }
@@ -66,6 +69,14 @@ const pipeManager = {
             pipe.draw();
         });
     },
+    checkCollision : function(){
+        this.pipes.forEach(pipe => {
+            if(pipe.x <= player.pos.x+player.size && pipe.x+30 >= player.pos.x) {
+                if(pipe.safeZone > player.pos.y || pipe.safeZone+120 < player.pos.y+player.size)
+                    gameStatus.gameOver = true;
+            }
+        });
+    },
     movePipes : function(){
         this.pipes.forEach(pipe => {
             pipe.move();
@@ -86,17 +97,23 @@ function Start(){
 }
 
 function Update(){
+    setTimeout(Update, 30);
     ClearScreen();
 
-    player.move();
+    pipeManager.drawPipes();
     player.draw();
+
+    if(!gameStatus.isPlaying ) return;
+    
+    player.move();
     player.checkCollision();
 
+    if(gameStatus.gameOver == true) return;
+
     pipeManager.movePipes();
-    pipeManager.drawPipes();
+    pipeManager.checkCollision();
 
 
-    setTimeout(Update, 30);
 }
 
 function ClearScreen(){
@@ -105,5 +122,7 @@ function ClearScreen(){
 }
 
 function HandleKeyPress(e){
+    if(gameStatus.isPlaying == false) gameStatus.isPlaying = true;
+    if(gameStatus.gameOver == true) return;
     player.vel = 10;
 }
