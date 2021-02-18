@@ -13,7 +13,6 @@ class Bird{
         ctx.fillRect(this.pos.x, this.pos.y, this.size, this.size);
     }
     move(){
-        console.log(minmax(-15,15,this.vel));
         this.vel = minmax(-15,15,this.vel);
         this.pos.y -= this.vel;
         this.vel += -1;
@@ -24,8 +23,56 @@ class Bird{
         player.pos.y = minmax(minY,maxY,player.pos.y);
     }
 }
+class Pipe{
+    constructor(x){
+        this.x = canvas.width + x;
+        this.vel = 3;
+        this.generateSafeZone();
+    }
+    generateSafeZone(){
+        this.safeZone = Math.floor((Math.random() * 475) +50);
+    }
+    reset(){
+        this.x = canvas.width;
+        this.generateSafeZone();
+    }
+    draw(){
+        ctx.fillStyle = "#00ff00";
+        // Draw top pipe 
+        ctx.fillRect(this.x, 0, 30, this.safeZone);
+        // Draw top pipe 
+        ctx.fillRect(this.x, this.safeZone+120, 30, canvas.height - this.safeZone);
+    }
+    move(){
+        this.x -= this.vel;
+    }
+    isOffScreen(){
+        if(this.x+30 < 0) return true;
+        return false;
+    }
+}
 
 const player = new Bird(20);
+const pipeManager = { 
+    pipes:[],
+    generatePipes : function(){
+        const distBase = Math.floor(canvas.width/2);
+        for(let i=0; i<2;i++){
+            this.pipes.push(new Pipe(distBase*i));
+        }
+    },
+    drawPipes : function(){
+        this.pipes.forEach(pipe => {
+            pipe.draw();
+        });
+    },
+    movePipes : function(){
+        this.pipes.forEach(pipe => {
+            pipe.move();
+            if(pipe.isOffScreen()) pipe.reset();
+        });
+    }
+};
 
 
 Start();
@@ -34,6 +81,8 @@ Update();
 function Start(){
     canvas.focus();
     canvas.addEventListener('click', HandleKeyPress);
+
+    pipeManager.generatePipes();
 }
 
 function Update(){
@@ -42,6 +91,10 @@ function Update(){
     player.move();
     player.draw();
     player.checkCollision();
+
+    pipeManager.movePipes();
+    pipeManager.drawPipes();
+
 
     setTimeout(Update, 30);
 }
@@ -52,5 +105,5 @@ function ClearScreen(){
 }
 
 function HandleKeyPress(e){
-    player.vel = 15;
+    player.vel = 10;
 }
