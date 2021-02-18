@@ -18,6 +18,11 @@ class Bird{
         this.pos.y -= this.vel;
         this.vel += -1;
     }
+    checkCollision(){
+        let minY = 0 + Math.floor(this.size/2);
+        let maxY = canvas.height - this.size*2;
+        player.pos.y = minmax(minY,maxY,player.pos.y);
+    }
 }
 
 const player = new Bird(20);
@@ -33,8 +38,11 @@ function Start(){
 
 function Update(){
     ClearScreen();
+
     player.move();
     player.draw();
+    player.checkCollision();
+
     setTimeout(Update, 30);
 }
 
