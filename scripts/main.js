@@ -2,7 +2,8 @@ const canvas = document.querySelector('#gameScreen');
 const ctx = canvas.getContext("2d");
 const gameStatus = {
     isPlaying:false,
-    gameOver:false
+    gameOver:false,
+    score:0
 }
 
 class Bird{
@@ -93,6 +94,12 @@ function Start(){
     canvas.focus();
     canvas.addEventListener('click', HandleKeyPress);
 
+    gameStatus.score = 0;
+    gameStatus.isPlaying = false;
+    gameStatus.gameOver = false;
+
+    player.pos.y = Math.ceil(canvas.height/2+player.size);
+    pipeManager.pipes = [];
     pipeManager.generatePipes();
 }
 
@@ -108,14 +115,27 @@ function Update(){
     player.move();
     player.checkCollision();
 
-    if(gameStatus.gameOver == true) return;
+    if(gameStatus.gameOver == true) {
+        DrawScore(true);
+        return;
+    }
 
     pipeManager.movePipes();
     pipeManager.checkCollision();
 
+    IncreaseScore();
+    DrawScore();
 
 }
-
+function IncreaseScore(iby=1){
+    gameStatus.score+=iby;
+}
+function DrawScore(center=false){
+    ctx.font = "30px Arial";
+    ctx.textAlign = "center";
+    let alignY = center?canvas.height/2:80; 
+    ctx.fillText(gameStatus.score.toString(), canvas.width/2, alignY);
+}
 function ClearScreen(){
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -123,6 +143,6 @@ function ClearScreen(){
 
 function HandleKeyPress(e){
     if(gameStatus.isPlaying == false) gameStatus.isPlaying = true;
-    if(gameStatus.gameOver == true) return;
+    if(gameStatus.gameOver == true) {Start(); return};
     player.vel = 10;
 }
