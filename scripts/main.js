@@ -5,12 +5,23 @@ const gameStatus = {
     gameOver:false,
     score:0
 }
+const sounds = {
+    fly:"sounds/fly.wav",
+    hit:"sounds/hit.wav"
+}
+const audioSource = document.createElement("audio");
 
 class Bird{
     constructor(size){
         this.pos = new Vector2d(50,Math.ceil(canvas.height/2+size));
         this.size = size;
         this.vel = 0;
+        this.collisionOn = true;
+    }
+    reset(){
+        this.pos = new Vector2d(50,Math.ceil(canvas.height/2+this.size));
+        this.vel = 0;
+        this.collisionOn = true;
     }
     draw(){
         ctx.fillStyle = "#000000";
@@ -22,6 +33,7 @@ class Bird{
         this.vel += -1;
     }
     checkCollision(){
+        if(this.collisionOn == false) return;
         let minY = 0 + Math.floor(this.size/2);
         let maxY = canvas.height - this.size;
         player.pos.y = minmax(minY,maxY,player.pos.y);
@@ -74,7 +86,7 @@ const pipeManager = {
         this.pipes.forEach(pipe => {
             if(pipe.x <= player.pos.x+player.size && pipe.x+30 >= player.pos.x) {
                 if(pipe.safeZone > player.pos.y || pipe.safeZone+120 < player.pos.y+player.size)
-                    gameStatus.gameOver = true;
+                    GameOver();
             }
         });
     },
@@ -98,7 +110,7 @@ function Start(){
     gameStatus.isPlaying = false;
     gameStatus.gameOver = false;
 
-    player.pos.y = Math.ceil(canvas.height/2+player.size);
+    player.reset();
     pipeManager.pipes = [];
     pipeManager.generatePipes();
 }
@@ -117,6 +129,7 @@ function Update(){
 
     if(gameStatus.gameOver == true) {
         DrawScore(true);
+        if(player.pos.y > canvas.height*1.25) Start();
         return;
     }
 
@@ -127,6 +140,17 @@ function Update(){
     DrawScore();
 
 }
+function GameOver(){
+    PlaySound(sounds.hit);
+    gameStatus.gameOver = true;
+    player.collisionOn = false;
+}
+
+function PlaySound(src){
+    audioSource.src = src;
+    audioSource.play();
+}
+
 function IncreaseScore(iby=1){
     gameStatus.score+=iby;
 }
@@ -143,6 +167,7 @@ function ClearScreen(){
 
 function HandleKeyPress(e){
     if(gameStatus.isPlaying == false) gameStatus.isPlaying = true;
-    if(gameStatus.gameOver == true) {Start(); return};
+    if(gameStatus.gameOver == true) return;
     player.vel = 10;
+    PlaySound(sounds.fly);
 }
