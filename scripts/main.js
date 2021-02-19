@@ -1,3 +1,6 @@
+import Player from './classes/player.js';
+import Pipe from './classes/pipe.js';
+
 const canvas = document.querySelector('#gameScreen');
 const ctx = canvas.getContext("2d");
 const gameStatus = {
@@ -11,75 +14,19 @@ const sounds = {
 }
 const audioSource = document.createElement("audio");
 
-class Bird{
-    constructor(size){
-        this.pos = new Vector2d(50,Math.ceil(canvas.height/2+size));
-        this.size = size;
-        this.vel = 0;
-        this.collisionOn = true;
-    }
-    reset(){
-        this.pos = new Vector2d(50,Math.ceil(canvas.height/2+this.size));
-        this.vel = 0;
-        this.collisionOn = true;
-    }
-    draw(){
-        ctx.fillStyle = "#000000";
-        ctx.fillRect(this.pos.x, this.pos.y, this.size, this.size);
-    }
-    move(){
-        this.vel = minmax(-15,15,this.vel);
-        this.pos.y -= this.vel;
-        this.vel += -1;
-    }
-    checkCollision(){
-        if(this.collisionOn == false) return;
-        let minY = 0 + Math.floor(this.size/2);
-        let maxY = canvas.height - this.size;
-        player.pos.y = minmax(minY,maxY,player.pos.y);
-    }
-}
-class Pipe{
-    constructor(x){
-        this.x = canvas.width + x;
-        this.vel = 3;
-        this.generateSafeZone();
-    }
-    generateSafeZone(){
-        this.safeZone = Math.floor((Math.random() * 475) +50);
-    }
-    reset(){
-        this.x = canvas.width;
-        this.generateSafeZone();
-    }
-    draw(){
-        ctx.fillStyle = "#00ff00";
-        // Draw top pipe 
-        ctx.fillRect(this.x, 0, 30, this.safeZone);
-        // Draw top pipe 
-        ctx.fillRect(this.x, this.safeZone+120, 30, canvas.height - this.safeZone);
-    }
-    move(){
-        this.x -= this.vel;
-    }
-    isOffScreen(){
-        if(this.x+30 < 0) return true;
-        return false;
-    }
-}
-
-const player = new Bird(20);
+const player = new Player(20,canvas.height);
 const pipeManager = { 
     pipes:[],
     generatePipes : function(){
         const distBase = Math.floor(canvas.width/2);
         for(let i=0; i<2;i++){
-            this.pipes.push(new Pipe(distBase*i));
+            let posToInstantiate = canvas.width + (distBase*i);
+            this.pipes.push(new Pipe(posToInstantiate));
         }
     },
-    drawPipes : function(){
+    drawPipes : function(ctx){
         this.pipes.forEach(pipe => {
-            pipe.draw();
+            pipe.draw(ctx,canvas.height);
         });
     },
     checkCollision : function(){
@@ -93,7 +40,7 @@ const pipeManager = {
     movePipes : function(){
         this.pipes.forEach(pipe => {
             pipe.move();
-            if(pipe.isOffScreen()) pipe.reset();
+            if(pipe.isOffScreen()) pipe.reset(canvas.width);
         });
     }
 };
@@ -110,7 +57,7 @@ function Start(){
     gameStatus.isPlaying = false;
     gameStatus.gameOver = false;
 
-    player.reset();
+    player.setDefault();
     pipeManager.pipes = [];
     pipeManager.generatePipes();
 }
@@ -119,8 +66,8 @@ function Update(){
     setTimeout(Update, 30);
     ClearScreen();
 
-    pipeManager.drawPipes();
-    player.draw();
+    pipeManager.drawPipes(ctx);
+    player.draw(ctx);
 
     if(!gameStatus.isPlaying ) return;
     
@@ -129,7 +76,7 @@ function Update(){
 
     if(gameStatus.gameOver == true) {
         DrawScore(true);
-        if(player.pos.y > canvas.height*1.25) Start();
+        if(player.pos.y > canvas.height*1.5) Start();
         return;
     }
 
